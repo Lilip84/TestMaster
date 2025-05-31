@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Нагрузочное тестирование{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">Параметры теста</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Количество пользователей</label>
+                    <input type="number" class="form-control" id="userCount" value="100">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Скорость создания (пользователей/сек)</label>
+                    <input type="number" class="form-control" id="spawnRate" value="10">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Длительность (сек)</label>
+                    <input type="number" class="form-control" id="duration" value="60">
+                </div>
+                
+                <button class="btn btn-danger w-100" id="startLoadTest">Запустить нагрузочный тест</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Результаты</div>
+            <div class="card-body">
+                <div id="loadStats">
+                    <p class="text-center text-muted">Тест еще не запущен</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('startLoadTest').addEventListener('click', () => {
+    const params = {
+        users: document.getElementById('userCount').value,
+        spawn_rate: document.getElementById('spawnRate').value,
+        duration: document.getElementById('duration').value
+    };
+    
+    fetch('/api/run-load-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loadStats').innerHTML = `
+            <div class="alert alert-info">
+                Тест запущен! ID: ${data.task_id}
+            </div>
+            <p>Обновляйте страницу для получения результатов</p>
+        `;
+    });
+});
+</script>
+{% endblock %}

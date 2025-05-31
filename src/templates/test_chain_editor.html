@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Конструктор цепочек тестов{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-9">
+        <div id="blocklyDiv" style="height: 600px; width: 100%;"></div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-header">Действия</div>
+            <div class="card-body">
+                <button class="btn btn-success mb-2 w-100" id="saveChain">Сохранить цепочку</button>
+                <button class="btn btn-primary w-100" id="runChain">Запустить цепочку</button>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">Доступные тесты</div>
+            <div class="card-body" id="availableTests">
+                {% for test in tests %}
+                <div class="test-item mb-2 p-2 border rounded" draggable="true" data-test-id="{{ test.id }}">
+                    {{ test.name }} ({{ test.type }})
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">Сгенерированный код</div>
+            <div class="card-body">
+                <pre id="generatedCode"># Код появится здесь после сохранения</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/blockly/blockly_compressed.js"></script>
+<script src="/static/blockly/blocks_compressed.js"></script>
+<script src="/static/blockly/javascript_compressed.js"></script>
+<script src="/static/blockly/msg/ru.js"></script>
+<script src="/static/js/blockly_blocks.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Инициализация рабочей области Blockly
+    const workspace = Blockly.inject('blocklyDiv', {
+        toolbox: {
+            "kind": "flyoutToolbox",
+            "contents": [
+                {
+                    "kind": "block",
+                    "type": "testmaster_start"
+                },
+                {
+                    "kind": "block",
+                    "type": "testmaster_ui_test"
+                },
+                {
+                    "kind": "block",
+                    "type": "testmaster_api_test"
+                },
+                {
+                    "kind": "block",
+                    "type": "testmaster_db_check"
+                },
+                {
+                    "kind": "block",
+                    "type": "testmaster_end"
+                }
+            ]
+        },
+        trashcan: true,
+        scrollbars: true
+    });
+    
+    // Загрузка доступных тестов
+    fetch('/api/tests')
+        .then(response => response.json())
+        .then(tests => {
+            const container = document.getElementById('availableTests');
+            tests.forEach(test => {
+                const div = document.createElement('div');
+                div.className = 'test-item mb-2 p-2 border rounded';
+                div.draggable = true;
+                div.dataset.testId = test.id;
+                div.textContent = `${test.name} (${test.type})`;
+                container.appendChild(div);
+            });
+        });
+    
+    // Сохранение цепочки
+    document.getElementById('saveChain').addEventListener('click', () => {
+        const xml = Blockly.Xml.workspaceToDom(workspace);
+        const xml_text = Blockly.Xml.domToText(xml);
+        const code = Blockly.JavaScript.workspaceToCode(workspace);
+        
+        document.getElementById('generatedCode').textContent = code;
+        
+        fetch('/api/save-test-chain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ xml: xml_text, code: code })
+        })
+        .then(response => alert('Цепочка сохранена!'));
+    });
+    
+    // Запуск цепочки
+    document.getElementById('runChain').addEventListener('click', () => {
+        const code = Blockly.JavaScript.workspaceToCode(workspace);
+        fetch('/api/run-test-chain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: code })
+        })
+        .then(response => alert('Цепочка запущена!'));
+    });
+});
+</script>
+
+<style>
+#blocklyDiv {
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+}
+
+.test-item {
+    cursor: grab;
+    background-color: #f8f9fa;
+}
+
+.test-item:hover {
+    background-color: #e9ecef;
+}
+
+.blocklyToolboxDiv {
+    background: #f8f9fa;
+    border-right: 1px solid #ddd;
+}
+</style>
+{% endblock %}

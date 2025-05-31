@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Главная панель{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h2>Мои тесты</h2>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card test-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Проверка логина</h5>
+                        <p class="card-text">UI тест для проверки авторизации</p>
+                        <button class="btn btn-primary run-test" data-test-id="1">Запустить</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card test-card">
+                    <div class="card-body">
+                        <h5 class="card-title">API пользователей</h5>
+                        <p class="card-text">Тестирование API работы с пользователями</p>
+                        <button class="btn btn-primary run-test" data-test-id="2">Запустить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Логи выполнения</div>
+            <div class="card-body log-container" id="logContainer">
+                <div class="mb-2"><small class="text-muted">Система инициализирована</small></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.run-test').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const testId = btn.dataset.testId;
+        fetch('/api/run-test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ test_id: testId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const log = `<div class="mb-2"><strong>Тест #${testId}:</strong> Запущен (ID задачи: ${data.task_id})</div>`;
+            document.getElementById('logContainer').innerHTML += log;
+        });
+    });
+});
+</script>
+{% endblock %}

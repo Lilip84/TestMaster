@@ -1,0 +1,51 @@
+/* Дополнительные стили для интерфейса */
+.blocklyTreeLabel {
+    font-size: 14px;
+}
+
+.blocklyTreeRow {
+    padding: 8px 15px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+}
+
+.blocklyTreeSelected .blocklyTreeLabel {
+    color: white;
+}
+
+.blocklyTreeSelected {
+    background-color: #0d6efd !important;
+}
+
+/* Стили для карточек тестов */
+.test-card {
+    transition: transform 0.2s;
+}
+
+.test-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* Стили для логов */
+.log-entry {
+    padding: 8px 12px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.log-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.log-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.log-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}

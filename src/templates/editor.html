@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Редактор тестов{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header">Тип теста</div>
+            <div class="card-body">
+                <select class="form-select" id="testType">
+                    <option value="ui">UI Тест</option>
+                    <option value="api">API Тест</option>
+                    <option value="db">Проверка БД</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">Действия</div>
+            <div class="card-body">
+                <button class="btn btn-success mb-2 w-100" id="saveTest">Сохранить тест</button>
+                <button class="btn btn-primary w-100" id="runTest">Запустить тест</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-9">
+        <div class="card">
+            <div class="card-header">
+                <input type="text" class="form-control" id="testName" placeholder="Название теста">
+            </div>
+            <div class="card-body">
+                <div id="editor" style="height: 500px; border: 1px solid #ddd;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+    
+    require(['vs/editor/editor.main'], () => {
+        const editor = monaco.editor.create(document.getElementById('editor'), {
+            value: `# Введите код теста здесь\n\ndef test_example():\n    print("Hello TestMaster!")`,
+            language: 'python',
+            theme: 'vs-dark',
+            automaticLayout: true
+        });
+        
+        // Сохранение теста
+        document.getElementById('saveTest').addEventListener('click', () => {
+            const testName = document.getElementById('testName').value || `Тест_${Date.now()}`;
+            const testType = document.getElementById('testType').value;
+            const code = editor.getValue();
+            
+            fetch('/api/save-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: testName, type: testType, code: code })
+            })
+            .then(response => alert('Тест сохранен!'));
+        });
+        
+        // Запуск теста
+        document.getElementById('runTest').addEventListener('click', () => {
+            const code = editor.getValue();
+            const testType = document.getElementById('testType').value;
+            
+            fetch('/api/run-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: testType, code: code })
+            })
+            .then(response => alert('Тест запущен!'));
+        });
+    });
+});
+</script>
+{% endblock %}

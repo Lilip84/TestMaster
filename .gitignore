@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+.python-version
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environments
+.env
+.venv
+
+# Test artifacts
+/test-results/
+/screenshots/
+
+# Playwright
+/playwright-*.json
+
+# Locust
+/locust_reports/
