@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки подключений{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Настройки подключений</h2>
+    
+    <form method="POST" action="{{ url_for('connection_settings') }}">
+        <div class="mb-3">
+            <label for="web_base_url" class="form-label">Базовый URL веб-приложения</label>
+            <input type="url" class="form-control" id="web_base_url" 
+                   name="web_base_url" value="{{ config.web_base_url }}" 
+                   placeholder="https://ваш-сайт.com" required>
+            <div class="form-text">Базовый адрес вашего веб-приложения</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="api_base_url" class="form-label">Базовый URL API</label>
+            <input type="url" class="form-control" id="api_base_url" 
+                   name="api_base_url" value="{{ config.api_base_url }}" 
+                   placeholder="https://api.ваш-сайт.com/v1">
+            <div class="form-text">Адрес API вашего приложения (если есть)</div>
+        </div>
+        
+        <div class="mb-3">
+            <label for="db_url" class="form-label">URL подключения к БД</label>
+            <input type="text" class="form-control" id="db_url" 
+                   name="db_url" value="{{ config.db_url }}" 
+                   placeholder="postgresql://user:password@host:port/dbname">
+            <div class="form-text">Строка подключения к базе данных</div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+    </form>
+    
+    <div class="mt-4">
+        <h4>Тестирование подключений</h4>
+        <button id="test-web" class="btn btn-outline-secondary">Проверить веб-подключение</button>
+        <button id="test-api" class="btn btn-outline-secondary">Проверить API-подключение</button>
+        <button id="test-db" class="btn btn-outline-secondary">Проверить БД-подключение</button>
+        <div id="test-results" class="mt-2"></div>
+    </div>
+</div>
+
+<script>
+document.getElementById('test-web').addEventListener('click', async () => {
+    const response = await fetch('/api/test-connection/web');
+    const result = await response.json();
+    showTestResult('web', result);
+});
+
+document.getElementById('test-api').addEventListener('click', async () => {
+    const response = await fetch('/api/test-connection/api');
+    const result = await response.json();
+    showTestResult('api', result);
+});
+
+document.getElementById('test-db').addEventListener('click', async () => {
+    const response = await fetch('/api/test-connection/db');
+    const result = await response.json();
+    showTestResult('db', result);
+});
+
+function showTestResult(type, result) {
+    const resultsDiv = document.getElementById('test-results');
+    const statusClass = result.success ? 'alert-success' : 'alert-danger';
+    const icon = result.success ? '✓' : '✗';
+    
+    resultsDiv.innerHTML = `
+        <div class="alert ${statusClass}">
+            <strong>${icon} ${type.toUpperCase()} подключение:</strong> ${result.message}
+            ${result.details ? `<div class="mt-2">${result.details}</div>` : ''}
+        </div>
+    `;
+}
+</script>
+{% endblock %}

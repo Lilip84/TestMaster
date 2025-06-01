@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   web:
     build: .
@@ -7,8 +6,13 @@ services:
     depends_on:
       - redis
     environment:
+      - FLASK_APP=./src/app.py
+      - FLASK_ENV=development
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - PYTHONPATH=/app/src
+    volumes:
+      - ./:/code
+    working_dir: /code
+    command: flask run --host=0.0.0.0
 
   worker:
     build: .
@@ -17,7 +21,9 @@ services:
       - redis
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - PYTHONPATH=/app/src
+    volumes:
+      - ./:/code
+    working_dir: /code
 
   redis:
     image: redis:alpine
@@ -29,5 +35,5 @@ services:
     ports:
       - "8089:8089"
     volumes:
-      - ./locustfile.py:/locust/locustfile.py
-    command: -f /locust/locustfile.py --host=http://web:5000
+      - ./locustfile.py:/locustfile.py
+    command: -f /locustfile.py --host=http://web:5000

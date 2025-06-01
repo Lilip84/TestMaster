@@ -1,38 +1,87 @@
-from playwright.sync_api import sync_playwright
-import requests
-from sqlalchemy import create_engine, text
 import logging
+from typing import Dict, Any, Union, List, Optional
+from .executor import execute_ui_test, execute_api_test, execute_db_check
+from src.core.config_db import ConfigDB
 
 class UniversalTester:
-    def __init__(self, config):
-        self.config = config
-        self.logger = logging.getLogger('TestMaster')
+    """Универсальный класс для выполнения различных типов тестов"""
+    
+    def __init__(self):
+        """
+        Инициализация тестера
+        Загружаем настройки при запуске экземпляра
+        """
+        self.config = ConfigDB.load_connections()
+        self.logger = logging.getLogger('UniversalTester')
+    
+    @property
+    def web_base_url(self):
+        return self.config.get('web_base_url', '')
+    
+    @property
+    def api_base_url(self):
+        return self.config.get('api_base_url', '')
+    
+    @property
+    def db_url(self):
+        return self.config.get('db_url', '')
+    
+    def test_ui(self, test_config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Выполняет UI-тест
+        """
+        test_config['base_url'] = self.web_base_url
+        try:
+            return execute_ui_test(test_config)
+        except Exception as e:
+            self.logger.error(f"UI test execution failed: {str(e)}")
+            return {
+                "status": "failed",
+                "error": str(e)
+            }
+    
+    def test_api(self, test_config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Выполняет API-тест
+        """
+        test_config['base_url'] = self.api_base_url
+        try:
+            return execute_api_test(test_config)
+        except Exception as e:
+            self.logger.error(f"API test execution failed: {str(e)}")
+            return {
+                "status": "failed",
+                "error": str(e)
+            }
+    
+    def test_db(self, test_config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Выполняет проверку базы данных
+        """
+        test_config['db_url'] = self.db_url
+        try:
+            return execute_db_check(test_config)
+        except Exception as e:
+            self.logger.error(f"DB check execution failed: {str(e)}")
+            return {
+                "status": "failed",
+                "error": str(e)
+            }
+    
+    def run_test(self, test_type: str, test_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Запускает тест указанного типа
+        """
+        handlers = {
+            'ui': self.test_ui,
+            'api': self.test_api,
+            'db': self.test_db
+        }
         
-        # Инициализация подключений
-        if config.DB_URL:
-            self.db_engine = create_engine(config.DB_URL)
-        if config.API_BASE_URL:
-            self.api_base_url = config.API_BASE_URL
-        if config.WEB_BASE_URL:
-            self.web_base_url = config.WEB_BASE_URL
-    
-    def test_ui(self, test_config):
-        # Использует execute_ui_test из executor.py
-        pass
-    
-    def test_api(self, endpoint, method='GET', payload=None):
-        url = f"{self.api_base_url}{endpoint}"
-        return requests.request(method, url, json=payload)
-    
-    def test_db(self, query):
-        with self.db_engine.connect() as conn:
-            result = conn.execute(text(query))
-            return result.fetchall()
-    
-    def run_test(self, test_type, test_data):
-        if test_type == 'ui':
-            return self.test_ui(test_data)
-        elif test_type == 'api':
-            return self.test_api(test_data)
-        elif test_type == 'db':
-            return self.test_db(test_data)
+        if test_type not in handlers:
+            return {
+                "status": "error",
+                "error": f"Unsupported test type: {test_type}"
+            }
+        
+        return handlers[test_type](test_data)

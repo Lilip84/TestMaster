@@ -31,3 +31,32 @@
 - Playwright (браузерная автоматизация)
 - SQLAlchemy (работа с БД)
 - Locust (нагрузочное тестирование)
+
+## Полная инструкция для запуска:
+# 1. Перейдите в папку проекта
+cd C:\Users\lilip\OneDrive\Рабочий стол\TestMaster
+
+# 2. Активируйте виртуальное окружение
+.\testmaster-env\Scripts\activate
+
+# 3. Добавьте проект в PYTHONPATH
+$env:PYTHONPATH = "$env:PYTHONPATH;$pwd"
+
+# 4. Запустите Redis
+docker start testmaster-redis || docker run -d -p 6379:6379 --name testmaster-redis redis
+
+# 5. Запустите Flask приложение
+python src\app.py
+
+В отдельном окне PowerShell:
+# 1. Перейдите в папку проекта
+cd C:\Users\lilip\OneDrive\Рабочий стол\TestMaster
+
+# 2. Активируйте виртуальное окружение
+.\testmaster-env\Scripts\activate
+
+# 3. Добавьте проект в PYTHONPATH
+$env:PYTHONPATH = "$env:PYTHONPATH;$pwd"
+
+# 4. Запустите Celery
+celery -A src.celery_worker.celery worker --loglevel=info -P eventlet
